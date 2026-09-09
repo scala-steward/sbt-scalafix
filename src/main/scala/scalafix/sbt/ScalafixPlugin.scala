@@ -568,8 +568,17 @@ object ScalafixPlugin extends AutoPlugin {
         // flag rather than checking !scalafixInvoked, in order to trigger
         // compile in case scalafix is wrapped in another task that
         // scalafixInvoked does not know about
+        //
+        // For explicit invocations, also depend on copyResources: the semantic
+        // classpath includes `classDirectory`, which scalameta walks to build
+        // the symbol table, and `copyResources` writes into `classDirectory`.
+        // Without this ordering the walk can race resource copying and observe a
+        // file that is being renamed into place, surfacing as "Unable to load
+        // symbol table" (scalacenter/scalafix#2469). We deliberately do NOT add
+        // this to the triggered branch, which must stay dependency-free to avoid
+        // the circular dependency described above.
         if (shellArgs.extra.contains("--triggered")) task
-        else task.dependsOn(config / compile)
+        else task.dependsOn(config / compile, config / copyResources)
       } else {
         Def.task {
           if (errors.length == 1) {
