@@ -1,0 +1,7 @@
+# Remove any marker left from a previous run.
+> clean
+
+# Running ONLY scalafix must trigger copyResources (via the dependency the fix
+# adds), which writes the marker. Then the marker must exist.
+> Compile / scalafix
+> checkMarker
